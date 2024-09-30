@@ -1,0 +1,35 @@
+services:
+  postgres-container:
+    build:
+      context: .
+      dockerfile: ./Postgres/Dockerfile
+    environment:
+      POSTGRES_DB: keycloakdb
+      POSTGRES_USER: keycloakuser
+      POSTGRES_PASSWORD: keycloakpassword
+    ports:
+      - "5432:5432"
+    networks:
+      - keycloak-network
+
+  keycloak-container:
+    build:
+      context: .
+      dockerfile: ./keycloak/Dockerfile
+    environment:
+      KC_DB_URL: jdbc:postgresql://postgres-container:5432/keycloakdb
+      KC_DB_USERNAME: keycloakuser
+      KC_DB_PASSWORD: keycloakpassword
+      KEYCLOAK_ADMIN: admin
+      KEYCLOAK_ADMIN_PASSWORD: adminpassword
+    ports:
+      - "8080:8080"
+      - "8443:8443"
+    depends_on:
+      - postgres-container
+    networks:
+      - keycloak-network
+
+networks:
+  keycloak-network:
+    driver: bridge

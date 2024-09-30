@@ -1,0 +1,54 @@
+services:
+  postgres:
+    image: postgres:latest
+    container_name: keycloak-postgres-db
+    environment:
+      POSTGRES_DB: keycloak
+      POSTGRES_USER: keycloak
+      POSTGRES_PASSWORD: password
+    ports:
+      - 9020:5432
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - keycloak-network
+
+  pgadmin:
+    image: dpage/pgadmin4:8.11
+    container_name: pgAdmin
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "9021:80"
+    depends_on:
+      - postgres
+    networks:
+      - keycloak-network
+
+  keycloak:
+    image: quay.io/keycloak/keycloak:latest
+    container_name: keycloak
+    environment:
+      KC_DB: postgres
+      KC_DB_URL_HOST: postgres  # Service name of the Postgres container
+      KC_DB_URL_PORT: 5432
+      KC_DB_URL_DATABASE: keycloak
+      KC_DB_USERNAME: keycloak
+      KC_DB_PASSWORD: password
+      KEYCLOAK_USER: admin
+      KEYCLOAK_PASSWORD: password
+    command: ["start-dev"]
+    ports:
+      - "9022:8080"
+    depends_on:
+      - postgres
+    networks:
+      - keycloak-network
+
+volumes:
+  postgres_data:
+
+networks:
+  keycloak-network:
+    driver: bridge
